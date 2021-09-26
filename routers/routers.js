@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const mongoose = require('mongoose');
+const bcrypt = require("bcrypt");
 const User = require("../models/UserModel");
 
 // Fetch events using the ticketmaster api
@@ -32,23 +34,31 @@ router.post("/login", async (req, res) => {
 
 // Sign Up
 router.post("/signup", async (req, res) => {
-    console.log(req.body);
-    //TODO check passwords match
-    //TODO check user already exists
-    //TODO generate user id 
-    //todo? respond????
-
-    // WORKING
-    // save user
     const { fullName, username, password, confirmPassword } = req.body;
-    const newUser = new User({ fullName, username, password, confirmPassword, user_id: 1 }); //TODO generate user_id
+
+    // Make sure form was filled
+    if (!fullName || !username || !password || !confirmPassword) return res.status(400).send("Please fill the form.");
+
+    // Check passwords match
+    if (password !== confirmPassword) return res.status(400).send("Passwords do not match.");
+
+    // hash password 
+    const hash = await bcrypt.hash(password, 10);
+
+    // Check if username is taken
+    const userTaken = await User.findOne({ username, }).exec();
+    if (userTaken !== null) return res.status(400).send("Username taken.");
+
+    // save user
+    const newUser = new User({ fullName, username, password: hash });
     newUser.save(e => {
-        if (e) console.log(e); //TODO should probably return an error or something idk
+        if (e) {
+            console.log(e);
+            res.status(500).send("Error creating account.");
+        }
     })
 
-    //todo? (on client side)
-    //todo? if response is 200 then redirect to /login
-    //todo? else stay on sign up
+    res.send();
 })
 
 module.exports = router;
