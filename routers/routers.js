@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const mongoose = require('mongoose');
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const User = require("../models/UserModel");
 
 // Fetch events using the ticketmaster api
@@ -29,8 +29,34 @@ router.post("/events", async (req, res) => {
 router.post("/login", async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
-    //TODO Log user in
+
+    // Check user exists
+    const userFound = await User.findOne({ username });
+    if (userFound === null) return res.status(400).send("Unable to find user with those credentials.");
+
+    // Check password
+    const passwordMatch = await bcrypt.compare(password, userFound.password);
+    if (!passwordMatch) return res.status(400).send("Unable to find user with those credentials.");
+
+    //TODO some JWT bullshit idk yet
+    //TODO https://www.youtube.com/watch?v=mbsmsi7l3r4
+    /*     const user = { username }
+        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+        res.json({ accessToken }); */
 })
+
+//TODO Authenticate tokens
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    if (token === null) res.status(401).send();
+
+    //AAAAAAAAAAAAAAAAA
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403);
+        req.user = user;
+    });
+}
 
 // Sign Up
 router.post("/signup", async (req, res) => {
@@ -42,6 +68,8 @@ router.post("/signup", async (req, res) => {
     // Check passwords match
     if (password !== confirmPassword) return res.status(400).send("Passwords do not match.");
 
+    //TODO password criteria  
+
     // hash password 
     const hash = await bcrypt.hash(password, 10);
 
@@ -49,8 +77,12 @@ router.post("/signup", async (req, res) => {
     const userTaken = await User.findOne({ username, }).exec();
     if (userTaken !== null) return res.status(400).send("Username taken.");
 
+    // create JWT token
+    const token = jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+
     // save user
-    const newUser = new User({ fullName, username, password: hash });
+    const newUser = new User({ fullName, username, password: hash, token });
+
     newUser.save(e => {
         if (e) {
             console.log(e);

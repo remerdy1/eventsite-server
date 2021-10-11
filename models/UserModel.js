@@ -18,22 +18,11 @@ const userSchema = new mongoose.Schema({
         type: Array,
         required: true
     },
+    token: {
+        type: String,
+        required: true
+    }
 })
 
 const userModel = mongoose.model("User", userSchema);
 module.exports = userModel;
-
-/* 
-    USER:
-        User ID: Number unique
-        Username: String, unique
-        Password: String, cannot contain "password"
-        Favourites: Array, max length of 3 
-    
-    Event:
-        Name: String,
-        Date: String
-        Time: String
-        Ticket URL: String
-        Image URL: String
-*/
