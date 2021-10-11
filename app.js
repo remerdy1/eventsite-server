@@ -15,7 +15,7 @@ app.use(cors());
 const port = process.env.PORT || 8050;
 
 // Connect database
-mongoose.connect('mongodb://localhost:27017/eventsite', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb://localhost:27017/eventsite', { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: true });
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

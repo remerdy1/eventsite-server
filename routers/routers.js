@@ -38,24 +38,27 @@ router.post("/login", async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, userFound.password);
     if (!passwordMatch) return res.status(400).send("Unable to find user with those credentials.");
 
-    //TODO some JWT bullshit idk yet
-    //TODO https://www.youtube.com/watch?v=mbsmsi7l3r4
-    /*     const user = { username }
-        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
-        res.json({ accessToken }); */
+    // Create JWT token
+    const token = jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+    userFound.token = token;
+    await User.findByIdAndUpdate(userFound._id, userFound);
+
+    res.send();
 })
 
-//TODO Authenticate tokens
+// Authenticate tokens
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
     if (token === null) res.status(401).send();
 
-    //AAAAAAAAAAAAAAAAA
+
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
         if (err) return res.sendStatus(403);
         req.user = user;
     });
+
+    return next();
 }
 
 // Sign Up
