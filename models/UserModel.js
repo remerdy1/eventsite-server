@@ -24,5 +24,16 @@ const userSchema = new mongoose.Schema({
     }
 })
 
+// Returns public information about the user. .toJSON is called whenever an object is converted to JSON (like when res.send is used)
+userSchema.methods.toJSON = function() {
+    const user = this;
+    const userObject = user.toObject();
+
+    delete userObject.password;
+    delete userObject.token;
+
+    return userObject;
+}
+
 const userModel = mongoose.model("User", userSchema);
 module.exports = userModel;

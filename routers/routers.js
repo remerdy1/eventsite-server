@@ -3,7 +3,9 @@ const router = express.Router();
 const axios = require('axios');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const authenticateToken = require("../middleware/auth")
 const User = require("../models/UserModel");
+
 
 // Fetch events using the ticketmaster api
 router.post("/events", async (req, res) => {
@@ -46,21 +48,6 @@ router.post("/login", async (req, res) => {
     res.send();
 })
 
-// Authenticate tokens
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
-    if (token === null) res.status(401).send();
-
-
-    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
-        req.user = user;
-    });
-
-    return next();
-}
-
 // Sign Up
 router.post("/signup", async (req, res) => {
     const { fullName, username, password, confirmPassword } = req.body;
@@ -94,6 +81,13 @@ router.post("/signup", async (req, res) => {
     })
 
     res.send();
+})
+
+router.get("/:username/profile", async (req, res) => {
+    const { username } = req.params;
+    const userFound = await User.findOne({ username: username }).exec();
+
+    res.send(userFound);
 })
 
 module.exports = router;
