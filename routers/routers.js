@@ -27,6 +27,8 @@ router.post("/events", async (req, res) => {
     }
 })
 
+//todo logout
+
 // Login
 router.post("/login", async (req, res) => {
     const username = req.body.username;
@@ -45,7 +47,7 @@ router.post("/login", async (req, res) => {
     userFound.token = token;
     await User.findByIdAndUpdate(userFound._id, userFound);
 
-    res.send();
+    res.send({ token });
 })
 
 // Sign Up
@@ -83,11 +85,20 @@ router.post("/signup", async (req, res) => {
     res.send();
 })
 
-router.get("/:username/profile", async (req, res) => {
+// User profile 
+router.get("/:username/profile", authenticateToken, async (req, res) => {
     const { username } = req.params;
-    const userFound = await User.findOne({ username: username }).exec();
 
-    res.send(userFound);
+    try {
+        const userFound = await User.findOne({ username: username }).exec();
+        res.send(userFound);
+    } catch (e) {
+        res.status(400).send();
+    }
 })
 
+//TODO Add to favourites
+router.post("/:username/profile/favourites", async (req, res) => {
+    console.log(req.body);
+})
 module.exports = router;
