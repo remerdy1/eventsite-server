@@ -27,8 +27,6 @@ router.post("/events", async (req, res) => {
     }
 })
 
-//todo logout
-
 // Login
 router.post("/login", async (req, res) => {
     const username = req.body.username;
@@ -44,10 +42,9 @@ router.post("/login", async (req, res) => {
 
     // Create JWT token
     const token = jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
-    userFound.token = token;
     await User.findByIdAndUpdate(userFound._id, userFound);
 
-    res.send({ token });
+    res.send({ username, token });
 })
 
 // Sign Up
@@ -98,7 +95,7 @@ router.get("/:username/profile", authenticateToken, async (req, res) => {
 })
 
 //TODO Add to favourites
-router.post("/:username/profile/favourites", async (req, res) => {
+router.post("/:username/profile/favourites", authenticateToken, async (req, res) => {
     console.log(req.body);
 })
 module.exports = router;
