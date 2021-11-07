@@ -42,7 +42,6 @@ router.post("/login", async (req, res) => {
 
     // Create JWT token
     const token = jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
-    await User.findByIdAndUpdate(userFound._id, userFound);
 
     res.send({ username, token });
 })
@@ -70,16 +69,15 @@ router.post("/signup", async (req, res) => {
     const token = jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
 
     // save user
-    const newUser = new User({ fullName, username, password: hash, token });
+    const newUser = new User({ fullName, username, password: hash });
 
     newUser.save(e => {
         if (e) {
-            console.log(e);
             res.status(500).send("Error creating account.");
         }
     })
 
-    res.send();
+    res.status(201).send({ username, token });
 })
 
 // User profile 
@@ -94,8 +92,30 @@ router.get("/:username/profile", authenticateToken, async (req, res) => {
     }
 })
 
-//TODO Add to favourites
+// Add to favourites
 router.post("/:username/profile/favourites", authenticateToken, async (req, res) => {
-    console.log(req.body);
+    const username = req.user.username;
+    const event = req.body;
+
+    // respond with 400 if event data is invalid 
+    if (!event.name || !event.date || !event.time || !event.image) {
+        res.status(400).send("Unable to add to favourites");
+    }
+
+    const user = await User.findOne({ username }).exec();
+
+    // Check if event is already in favourites
+    if (user.favourites.some(e => e.name === event.name && e.date === event.date && e.time === event.time)) {
+        return res.status(400).send("Event already in favourites");
+    }
+
+    user.favourites.push(event);
+    try {
+        await user.save();
+    } catch (e) {
+        res.status(400).send("You have reached the maximum number of favourites");
+    }
+
+    res.send();
 })
 module.exports = router;
