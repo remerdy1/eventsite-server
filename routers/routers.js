@@ -84,12 +84,13 @@ router.post("/signup", async (req, res) => {
 router.get("/:username/profile", authenticateToken, async (req, res) => {
     const { username } = req.params;
 
-    try {
-        const userFound = await User.findOne({ username: username }).exec();
-        res.send(userFound);
-    } catch (e) {
-        res.status(400).send();
+    const userFound = await User.findOne({ username: username }).exec();
+
+    if (!userFound) {
+        return res.status(400).send();
     }
+
+    res.send(userFound);
 })
 
 // Add to favourites
@@ -98,11 +99,12 @@ router.post("/:username/profile/favourites", authenticateToken, async (req, res)
     const event = req.body;
 
     // respond with 400 if event data is invalid 
-    if (!event.name || !event.date || !event.time || !event.image) {
+    if (!event.name || !event.date || !event.time || !event.image || !event.url) {
         res.status(400).send("Unable to add to favourites");
     }
 
     const user = await User.findOne({ username }).exec();
+    if (!user) return res.status(400).send();
 
     // Check if event is already in favourites
     if (user.favourites.some(e => e.name === event.name && e.date === event.date && e.time === event.time)) {
@@ -110,6 +112,7 @@ router.post("/:username/profile/favourites", authenticateToken, async (req, res)
     }
 
     user.favourites.push(event);
+
     try {
         await user.save();
     } catch (e) {
@@ -118,4 +121,27 @@ router.post("/:username/profile/favourites", authenticateToken, async (req, res)
 
     res.send();
 })
+
+// Remove from favourites 
+router.delete("/:username/profile/favourites", authenticateToken, async (req, res) => {
+    const username = req.user.username;
+    const event = req.body;
+
+    // respond with 400 if event data is invalid 
+    if (!event.name || !event.date || !event.time || !event.image || !event.url) {
+        res.status(400).send("Unable to add to favourites");
+    }
+
+    const user = await User.findOne({ username }).exec();
+    if (!user) return res.status(400).send();
+
+    // remove event
+    const filtered = user.favourites.filter(e => e.url !== event.url);
+
+    user.favourites = filtered;
+    user.save();
+
+    res.send();
+})
+
 module.exports = router;

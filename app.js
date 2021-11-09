@@ -3,9 +3,6 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 // Routers
 const router = require("./routers/routers")
-// Schemas
-const eventModel = require("./models/EventModel")
-const userModel = require("./models/UserModel")
 
 
 require('dotenv').config();

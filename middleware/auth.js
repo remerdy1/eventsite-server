@@ -13,12 +13,6 @@ const authenticateToken = async (req, res, next) => {
     } catch (e) {
         return res.sendStatus(403);
     }
-
-    /*     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-            if (err) return res.sendStatus(403);
-            req.user = user;
-        });
-        return next(); */
 }
 
 module.exports = authenticateToken;
