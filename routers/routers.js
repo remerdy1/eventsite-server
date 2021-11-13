@@ -13,7 +13,6 @@ router.post("/events", async (req, res) => {
 
     city = req.body.city;
     countryCode = req.body.country;
-    // TODO: Filter results, remove duplicates, remove cancelled events etc
     const url = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&city=${city}&countryCode=${countryCode}`;
 
     // Fetch events
@@ -53,10 +52,12 @@ router.post("/signup", async (req, res) => {
     // Make sure form was filled
     if (!fullName || !username || !password || !confirmPassword) return res.status(400).send("Please fill the form.");
 
-    // Check passwords match
+    // Validate passwords
     if (password !== confirmPassword) return res.status(400).send("Passwords do not match.");
 
-    //TODO password criteria  
+    const passwordValidator = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+    if (!passwordValidator.test(password)) return res.status(400).send("Password must be atleast 8 characters long and contain a capital letter and a number");
+    if (password === username) return res.status(400).send("Username and Password cannot match");
 
     // hash password 
     const hash = await bcrypt.hash(password, 10);
